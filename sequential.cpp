@@ -5,25 +5,26 @@
 #include <mutex>
 #include <fstream>
 #include <sstream>
+#include "utimer.h"
 
 
 // Constants
-const int POPULATION_SIZE = 1000;
-const int NUM_ITERATIONS = 100;
-const float MUTATION_RATE = 0.2;
-const float ELITISM_RATE = 0.2;
+const int POPULATION_SIZE = 500;
+const int NUM_ITERATIONS = 10;
+const float MUTATION_RATE = 0.1;
+const float ELITISM_RATE = 0.1;
 
 // City struct
 struct City {
     int id;
-    double x;
-    double y;
+    float x;
+    float y;
 };
 
 // Chromosome struct
 struct Chromosome {
     std::vector<int> path;
-    double fitness;
+    float fitness;
 
     Chromosome() : fitness(0.0) {}
 };
@@ -33,16 +34,20 @@ std::vector<City> cities;
 std::vector<Chromosome> oldPopulation;
 std::vector<Chromosome> nextPopulation;
 
+long crossoverTime = 0;
+long mutationTime = 0;
+long fitnessTime = 0;
+
 // Function to calculate the distance between two cities
-double calculateDistance(const City& city1, const City& city2) {
-    double dx = city1.x - city2.x;
-    double dy = city1.y - city2.y;
+float calculateDistance(const City& city1, const City& city2) {
+    float dx = city1.x - city2.x;
+    float dy = city1.y - city2.y;
     return std::sqrt(dx * dx + dy * dy);
 }
 
 // Function to generate the adjacency matrix of distances between cities
-std::vector<std::vector<double>> generateAdjacencyMatrix(const std::vector<City>& cities) {
-    std::vector<std::vector<double>> adjacencyMatrix(cities.size(), std::vector<double>(cities.size(), 0.0));
+std::vector<std::vector<float>> generateAdjacencyMatrix(const std::vector<City>& cities) {
+    std::vector<std::vector<float>> adjacencyMatrix(cities.size(), std::vector<float>(cities.size(), 0.0));
     for (int i = 0; i < cities.size(); ++i) {
         for (int j = 0; j < cities.size(); ++j) {
             adjacencyMatrix[i][j] = calculateDistance(cities[i], cities[j]);
@@ -52,13 +57,13 @@ std::vector<std::vector<double>> generateAdjacencyMatrix(const std::vector<City>
 }
 
 // Function to get distance from the adjacency matrix
-double getDistance(const std::vector<std::vector<double>>& adjacencyMatrix, int cityIndex1, int cityIndex2) {
+float getDistance(const std::vector<std::vector<float>>& adjacencyMatrix, int cityIndex1, int cityIndex2) {
     return adjacencyMatrix[cityIndex1][cityIndex2];
 }
 
 // Function to calculate the fitness of a chromosome
-double calculateFitness(const Chromosome& chromosome, const std::vector<std::vector<double>>& adjacencyMatrix) {
-    double totalDistance = 0.0;
+float calculateFitness(const Chromosome& chromosome, const std::vector<std::vector<float>>& adjacencyMatrix) {
+    float totalDistance = 0.0;
     for (int i = 0; i < cities.size() - 1; ++i) {
         int cityIndex1 = chromosome.path[i];
         int cityIndex2 = chromosome.path[i + 1];
@@ -69,9 +74,8 @@ double calculateFitness(const Chromosome& chromosome, const std::vector<std::vec
     return 1.0 / totalDistance;
 }
 
-
 // Function to generate a random chromosome
-Chromosome generateRandomChromosome(const std::vector<std::vector<double>>& adjacencyMatrix) {
+Chromosome generateRandomChromosome(const std::vector<std::vector<float>>& adjacencyMatrix) {
     Chromosome chromosome;
     chromosome.path.resize(cities.size());
     for (int i = 0; i < cities.size(); ++i) {
@@ -81,7 +85,6 @@ Chromosome generateRandomChromosome(const std::vector<std::vector<double>>& adja
     chromosome.fitness = calculateFitness(chromosome, adjacencyMatrix);
     return chromosome;
 }
-
 
 // Function to perform crossover between two parent chromosomes. It uses "Ordered Crossover (OX)"
 void crossover(Chromosome& child, const Chromosome& parent1, const Chromosome& parent2) {
@@ -113,7 +116,6 @@ void crossover(Chromosome& child, const Chromosome& parent1, const Chromosome& p
     }
 }
 
-
 // Mutate function: up to MUTATION_RATE*NUM_CITIES cities are swapped
 void mutate(Chromosome& chromosome) {
    int numMutations = std::rand() % (int)(MUTATION_RATE * cities.size());
@@ -126,7 +128,7 @@ void mutate(Chromosome& chromosome) {
 
 
 // Function to generate a child chromosome from two parent chromosomes
-void generateChild(Chromosome& child, const std::vector<Chromosome> oldPopulation, const int numBestParents, const std::vector<std::vector<double>>& adjacencyMatrix) {
+void generateChild(Chromosome& child, const std::vector<Chromosome> oldPopulation, const int numBestParents, const std::vector<std::vector<float>>& adjacencyMatrix) {
     // Choose 2 random parents from oldPopulation up to numBestParents
     int parentIndex1 = std::rand() % numBestParents;
     int parentIndex2 = std::rand() % numBestParents;
@@ -134,10 +136,23 @@ void generateChild(Chromosome& child, const std::vector<Chromosome> oldPopulatio
     const Chromosome& parent2 = oldPopulation[parentIndex2];
 
     // Perform crossover and mutation to create a new child
-    crossover(child, parent1, parent2);
-    mutate(child);
-    child.fitness = calculateFitness(child, adjacencyMatrix);
+    long t;
+    {
+        utimer timer(&t);
+        crossover(child, parent1, parent2);
 
+    }
+    crossoverTime += t;
+    {
+        utimer timer(&t);
+        mutate(child);
+    }
+    mutationTime += t;
+    {
+        utimer timer(&t);
+        child.fitness = calculateFitness(child, adjacencyMatrix);
+    }
+    fitnessTime += t;
 }
     
 void printPopulation(const std::vector<Chromosome>& oldPopulation, std::string title) {
@@ -162,7 +177,7 @@ int main(int argc, char** argv) {
     //     citiesPth = "data/wi29.tsp";
     // }
 
-    std::string citiesPth = "data/wi29.tsp";
+    std::string citiesPth = "data/zi929.tsp";
 
     // Read cities from file. Each row contains the x and y coordinates of a city separated by a space.
     std::ifstream file(citiesPth);
@@ -173,7 +188,7 @@ int main(int argc, char** argv) {
     while (std::getline(file, line)) {
         std::istringstream iss(line);
         int id;
-        double x, y;
+        float x, y;
         if (!(iss >> id >> x >> y)) {
             break;
         }
@@ -185,23 +200,27 @@ int main(int argc, char** argv) {
     }
 
     // Calculate the distance between each pair of cities and store it in an adjacency matrix
-    std::vector<std::vector<double>> adjacencyMatrix = generateAdjacencyMatrix(cities);
+    std::vector<std::vector<float>> adjacencyMatrix = generateAdjacencyMatrix(cities);
 
     // Initialize random seed
     std::srand(std::time(nullptr));
 
     // Generate initial old population (random)
-    oldPopulation.resize(POPULATION_SIZE);
-    for (int i = 0; i < POPULATION_SIZE; ++i) {
-        oldPopulation[i] = generateRandomChromosome(adjacencyMatrix);
-    }
-    // Generate initial next population (empty)
-    nextPopulation.resize(POPULATION_SIZE);
-    for (int i = 0; i < POPULATION_SIZE; ++i) {
-        Chromosome chromosome;
-        chromosome.path.resize(cities.size());
-        nextPopulation[i] = chromosome;
-    }
+    long generationTime;
+    {
+        utimer timer(&generationTime);
+        oldPopulation.resize(POPULATION_SIZE);
+        for (int i = 0; i < POPULATION_SIZE; ++i) {
+            oldPopulation[i] = generateRandomChromosome(adjacencyMatrix);
+        }
+        // Generate initial next population (empty)
+        nextPopulation.resize(POPULATION_SIZE);
+        for (int i = 0; i < POPULATION_SIZE; ++i) {
+            Chromosome chromosome;
+            chromosome.path.resize(cities.size());
+            nextPopulation[i] = chromosome;
+        }
+    }    
 
     // Start evolution iterations
     for (int i = 0; i < NUM_ITERATIONS; ++i) {
@@ -223,6 +242,10 @@ int main(int argc, char** argv) {
         std::swap(oldPopulation, nextPopulation);
     }
   
+    std::cout << "GENERATION POPULATION TIME: " << generationTime << std::endl;
+    std::cout << "CROSSOVER TIME: " << crossoverTime << std::endl;
+    std::cout << "MUTATION TIME: " << mutationTime << std::endl;
+    std::cout << "FITNESS TIME: " << fitnessTime << std::endl;
 
     // Final sort of the population
     std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {

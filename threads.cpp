@@ -5,8 +5,52 @@
 #include <mutex>
 #include <fstream>
 #include <sstream>
+#include <thread>
+#include <functional>
 #include "utimer.h"
 
+// Class that imlements a map parallelization pattern
+class ParallelMap {
+
+    private:
+        int num_workers;
+
+    public:
+        ParallelMap(int nw)
+            : num_workers(nw) {}
+
+        // Map over a vector of data
+        template <typename T, typename Function, typename... Args>
+        void execute(Function&& function, std::vector<T>& data, Args... args) {
+            int chunk_size = data.size() / num_workers;
+
+            std::vector<std::thread> threads;
+
+            for (int i = 0; i < num_workers; i++) {
+                // Calculate the chunks
+                int start = i * chunk_size;
+                int end;
+                if (i == num_workers - 1) {
+                    end = data.size();
+                }
+                else {
+                    end = start + chunk_size;
+                }
+                threads.emplace_back([&function, &data, start, end, args...]() {
+                    // Iterate over the chunk in each thread
+                    for (int j = start; j < end; j++) {
+                        function(data[j], args...);
+                    }
+                });
+            }
+
+            for (auto& thread : threads) {
+                thread.join();
+            }
+        }
+
+
+};
 
 // Constants
 const int POPULATION_SIZE = 500;
@@ -173,6 +217,16 @@ void printPopulation(const std::vector<Chromosome>& oldPopulation, std::string t
 int main(int argc, char** argv) {
 
     // START INITIALIZATION
+
+    int num_workers = 8;
+    // If -nw flag is passed, use the next argument as the number of workers
+    if (argc > 1 && std::string(argv[1]) == "-nw") {
+        num_workers = std::stoi(argv[2]);
+    }
+    // Initialize parallel map
+    ParallelMap parMap(num_workers);
+
+    // Path to cities data file
     std::string citiesPth = "data/zi929.tsp";
 
     // Read cities from file. Each row contains the x and y coordinates of a city separated by a space.
@@ -194,6 +248,8 @@ int main(int argc, char** argv) {
         city.y = y;
         cities.push_back(city);
     }
+
+    
 
     // Calculate the distance between each pair of cities and store it in an adjacency matrix
     adjacencyMatrix = generateAdjacencyMatrix(cities);
@@ -222,6 +278,7 @@ int main(int argc, char** argv) {
     long evolutionTime;
     {
         utimer timer(&evolutionTime);
+
         for (int i = 0; i < NUM_ITERATIONS; ++i) {
             int numBestParents = POPULATION_SIZE * ELITISM_RATE;
             // Sort the population in descending order based on fitness
@@ -233,9 +290,8 @@ int main(int argc, char** argv) {
             std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
 
             // Iterate over each chromosome in the next population and generate a child
-            for (int j = 0; j < POPULATION_SIZE; ++j) {
-                generateChild(nextPopulation[j], oldPopulation, numBestParents);
-            }
+            parMap.execute(generateChild, nextPopulation, oldPopulation, numBestParents);
+    
 
             // Invert the populations for next iteration
             std::swap(oldPopulation, nextPopulation);

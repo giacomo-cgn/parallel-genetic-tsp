@@ -47,15 +47,13 @@ float calculateDistance(const City& city1, const City& city2) {
     return std::sqrt(dx * dx + dy * dy);
 }
 
-// Function to generate the adjacency matrix of distances between cities
-std::vector<std::vector<float>> generateAdjacencyMatrix(const std::vector<City>& cities) {
-    std::vector<std::vector<float>> adjacencyMatrix(cities.size(), std::vector<float>(cities.size(), 0.0));
+// Function to generate one row of the adjacency matrix of distances between cities
+std::vector<float> generateDistanceRow(const City& city, const std::vector<City>& cities) {
+    std::vector<float> row(cities.size(), 0.0);
     for (int i = 0; i < cities.size(); ++i) {
-        for (int j = 0; j < cities.size(); ++j) {
-            adjacencyMatrix[i][j] = calculateDistance(cities[i], cities[j]);
-        }
+        row[i] = calculateDistance(city, cities[i]);
     }
-    return adjacencyMatrix;
+    return row;
 }
 
 // Function to get distance from the adjacency matrix
@@ -77,13 +75,13 @@ float calculateFitness(const Chromosome& chromosome) {
 }
 
 // Function to generate a random chromosome
-Chromosome generateRandomChromosome(const std::vector<std::vector<float>>& adjacencyMatrix) {
+Chromosome generateRandomChromosome() {
     Chromosome chromosome;
     chromosome.path.resize(cities.size());
     for (int i = 0; i < cities.size(); ++i) {
         chromosome.path[i] = i;
     }
-    std::random_shuffle(chromosome.path.begin() + 1, chromosome.path.end());
+    std::random_shuffle(chromosome.path.begin(), chromosome.path.end());
     chromosome.fitness = calculateFitness(chromosome);
     return chromosome;
 }
@@ -170,6 +168,12 @@ void printPopulation(const std::vector<Chromosome>& oldPopulation, std::string t
     }
 }
 
+
+
+
+
+
+
 int main(int argc, char** argv) {
 
     // START INITIALIZATION
@@ -194,9 +198,17 @@ int main(int argc, char** argv) {
         city.y = y;
         cities.push_back(city);
     }
-
-    // Calculate the distance between each pair of cities and store it in an adjacency matrix
-    adjacencyMatrix = generateAdjacencyMatrix(cities);
+ 
+    // Initialize adjacency matrix
+    long distanceTime;
+    {
+        utimer timer(&distanceTime);
+        adjacencyMatrix.resize(cities.size());
+        // Calculate the distance between each pair of cities and store it in an adjacency matrix    
+        for (int i = 0; i < cities.size(); ++i) {     
+            adjacencyMatrix[i] = generateDistanceRow(cities[i], cities);
+        }
+    }
 
     // Initialize random seed
     std::srand(std::time(nullptr));
@@ -207,7 +219,7 @@ int main(int argc, char** argv) {
         utimer timer(&initializationTime);
         oldPopulation.resize(POPULATION_SIZE);
         for (int i = 0; i < POPULATION_SIZE; ++i) {
-            oldPopulation[i] = generateRandomChromosome(adjacencyMatrix);
+            oldPopulation[i] = generateRandomChromosome();
         }
         // Generate initial next population (empty)
         nextPopulation.resize(POPULATION_SIZE);
@@ -241,12 +253,14 @@ int main(int argc, char** argv) {
             std::swap(oldPopulation, nextPopulation);
         }
     }
-  
+    
+    std::cout << "DISTANCE MATRIX TIME: " << distanceTime << std::endl;
     std::cout << "POPULATION INITIALIZATION TIME: " << initializationTime << std::endl;
-    std::cout << "CROSSOVER TIME: " << crossoverTime << std::endl;
-    std::cout << "MUTATION TIME: " << mutationTime << std::endl;
-    std::cout << "FITNESS TIME: " << fitnessTime << std::endl;
     std::cout << "EVOLUTION TIME: " << evolutionTime << std::endl;
+    std::cout << "crossover time: " << crossoverTime << std::endl;
+    std::cout << "mutation time: " << mutationTime << std::endl;
+    std::cout << "fitness time: " << fitnessTime << std::endl;
+    
 
     // Final sort of the population
     std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {

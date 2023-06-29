@@ -9,7 +9,7 @@
 #include <functional>
 #include "utimer.h"
 
-// Class that imlements a map parallelization pattern
+// Class that implements a map parallelization pattern
 class ParallelMap {
 
     private:
@@ -49,7 +49,35 @@ class ParallelMap {
             }
         }
 
+        // Map over a vector of input data and and save the results in a vector of output data
+        template <typename T, typename U, typename Function, typename... Args>
+        void execute_save(Function&& function, std::vector<T>& input, std::vector<U>& output, Args... args) {
+            int chunk_size = input.size() / num_workers;
 
+            std::vector<std::thread> threads;
+
+            for (int i = 0; i < num_workers; i++) {
+                // Calculate the chunks
+                int start = i * chunk_size;
+                int end;
+                if (i == num_workers - 1) {
+                    end = input.size();
+                }
+                else {
+                    end = start + chunk_size;
+                }
+                threads.emplace_back([&function, &input, &output, start, end, args...]() {
+                    // Iterate over the chunk in each thread
+                    for (int j = start; j < end; j++) {
+                        output[j] = function(input[j], args...);
+                    }
+                });
+            }
+
+            for (auto& thread : threads) {
+                thread.join();
+            }
+        }
 };
 
 // Constants
@@ -91,15 +119,13 @@ float calculateDistance(const City& city1, const City& city2) {
     return std::sqrt(dx * dx + dy * dy);
 }
 
-// Function to generate the adjacency matrix of distances between cities
-std::vector<std::vector<float>> generateAdjacencyMatrix(const std::vector<City>& cities) {
-    std::vector<std::vector<float>> adjacencyMatrix(cities.size(), std::vector<float>(cities.size(), 0.0));
+// Function to generate one row of the adjacency matrix of distances between cities
+std::vector<float> generateDistanceRow(const City& city, const std::vector<City>& cities) {
+    std::vector<float> row(cities.size(), 0.0);
     for (int i = 0; i < cities.size(); ++i) {
-        for (int j = 0; j < cities.size(); ++j) {
-            adjacencyMatrix[i][j] = calculateDistance(cities[i], cities[j]);
-        }
+        row[i] = calculateDistance(city, cities[i]);
     }
-    return adjacencyMatrix;
+    return row;
 }
 
 // Function to get distance from the adjacency matrix
@@ -121,15 +147,13 @@ float calculateFitness(const Chromosome& chromosome) {
 }
 
 // Function to generate a random chromosome
-Chromosome generateRandomChromosome(const std::vector<std::vector<float>>& adjacencyMatrix) {
-    Chromosome chromosome;
+void generateRandomChromosome(Chromosome& chromosome) {
     chromosome.path.resize(cities.size());
     for (int i = 0; i < cities.size(); ++i) {
         chromosome.path[i] = i;
     }
-    std::random_shuffle(chromosome.path.begin() + 1, chromosome.path.end());
+    std::random_shuffle(chromosome.path.begin(), chromosome.path.end());
     chromosome.fitness = calculateFitness(chromosome);
-    return chromosome;
 }
 
 // Function to perform crossover between two parent chromosomes. It uses "Ordered Crossover (OX)"
@@ -214,6 +238,13 @@ void printPopulation(const std::vector<Chromosome>& oldPopulation, std::string t
     }
 }
 
+
+
+
+
+
+
+
 int main(int argc, char** argv) {
 
     // START INITIALIZATION
@@ -249,10 +280,15 @@ int main(int argc, char** argv) {
         cities.push_back(city);
     }
 
-    
+    long distanceTime;
+    {
+        utimer timer(&distanceTime);
+        // Initialize adjacency matrix
+        adjacencyMatrix.resize(cities.size());
+        // Calculate the distance between each pair of cities and store it in an adjacency matrix    
+        parMap.execute_save(generateDistanceRow, cities, adjacencyMatrix, cities);
+    }
 
-    // Calculate the distance between each pair of cities and store it in an adjacency matrix
-    adjacencyMatrix = generateAdjacencyMatrix(cities);
 
     // Initialize random seed
     std::srand(std::time(nullptr));
@@ -263,7 +299,7 @@ int main(int argc, char** argv) {
         utimer timer(&initializationTime);
         oldPopulation.resize(POPULATION_SIZE);
         for (int i = 0; i < POPULATION_SIZE; ++i) {
-            oldPopulation[i] = generateRandomChromosome(adjacencyMatrix);
+            generateRandomChromosome(oldPopulation[i]);
         }
         // Generate initial next population (empty)
         nextPopulation.resize(POPULATION_SIZE);
@@ -298,11 +334,12 @@ int main(int argc, char** argv) {
         }
     }
   
+    std::cout << "DISTANCE MATRIX TIME: " << distanceTime << std::endl;
     std::cout << "POPULATION INITIALIZATION TIME: " << initializationTime << std::endl;
-    std::cout << "CROSSOVER TIME: " << crossoverTime << std::endl;
-    std::cout << "MUTATION TIME: " << mutationTime << std::endl;
-    std::cout << "FITNESS TIME: " << fitnessTime << std::endl;
     std::cout << "EVOLUTION TIME: " << evolutionTime << std::endl;
+    std::cout << "crossover time: " << crossoverTime << std::endl;
+    std::cout << "mutation time: " << mutationTime << std::endl;
+    std::cout << "fitness time: " << fitnessTime << std::endl;
 
     // Final sort of the population
     std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {

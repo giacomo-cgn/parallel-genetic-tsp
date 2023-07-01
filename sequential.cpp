@@ -9,9 +9,9 @@
 
 
 // Constants
-const int POPULATION_SIZE = 500;
-const int NUM_ITERATIONS = 100;
-const float MUTATION_RATE = 0.1;
+const int POPULATION_SIZE = 1000;
+const int NUM_ITERATIONS = 50;
+const float MUTATION_RATE = 0.02;
 const float ELITISM_RATE = 0.1;
 
 // City struct
@@ -75,15 +75,19 @@ float calculateFitness(const Chromosome& chromosome) {
 }
 
 // Function to generate a random chromosome
-Chromosome generateRandomChromosome() {
-    Chromosome chromosome;
+void generateRandomChromosome(Chromosome& chromosome) {
     chromosome.path.resize(cities.size());
     for (int i = 0; i < cities.size(); ++i) {
         chromosome.path[i] = i;
     }
     std::random_shuffle(chromosome.path.begin(), chromosome.path.end());
     chromosome.fitness = calculateFitness(chromosome);
-    return chromosome;
+}
+
+// Generate empty chromosome
+void generateEmptyChromosome(Chromosome& chromosome) {
+    chromosome.path.resize(cities.size());
+    chromosome.fitness = 0.0;
 }
 
 // Function to perform crossover between two parent chromosomes. It uses "Ordered Crossover (OX)"
@@ -214,20 +218,24 @@ int main(int argc, char** argv) {
     std::srand(std::time(nullptr));
 
     // Generate initial old population (random)
-    long initializationTime;
+    long initializationTimeRandom;
     {
-        utimer timer(&initializationTime);
+        utimer timer(&initializationTimeRandom);
         oldPopulation.resize(POPULATION_SIZE);
         for (int i = 0; i < POPULATION_SIZE; ++i) {
-            oldPopulation[i] = generateRandomChromosome();
+            generateRandomChromosome(oldPopulation[i]);
         }
-        // Generate initial next population (empty)
+    }
+
+    // Generate initial next population (empty)
+    long initializationTimeEmpty;
+    {
+        utimer timer(&initializationTimeEmpty);
         nextPopulation.resize(POPULATION_SIZE);
         for (int i = 0; i < POPULATION_SIZE; ++i) {
-            Chromosome chromosome;
-            chromosome.path.resize(cities.size());
-            nextPopulation[i] = chromosome;
+            generateEmptyChromosome(nextPopulation[i]);
         }
+        
     }    
 
     // Start evolution iterations
@@ -253,9 +261,13 @@ int main(int argc, char** argv) {
             std::swap(oldPopulation, nextPopulation);
         }
     }
+
+    std::cout << "######## SEQUENTIAL TIMES ########" << std::endl;
+
     
     std::cout << "DISTANCE MATRIX TIME: " << distanceTime << std::endl;
-    std::cout << "POPULATION INITIALIZATION TIME: " << initializationTime << std::endl;
+    std::cout << "POPULATION INITIALIZATION TIME RANDOM: " << initializationTimeRandom << std::endl;
+    std::cout << "POPULATION INITIALIZATION TIME EMPTY: " << initializationTimeEmpty << std::endl;
     std::cout << "EVOLUTION TIME: " << evolutionTime << std::endl;
     std::cout << "crossover time: " << crossoverTime << std::endl;
     std::cout << "mutation time: " << mutationTime << std::endl;

@@ -156,6 +156,12 @@ void generateRandomChromosome(Chromosome& chromosome) {
     chromosome.fitness = calculateFitness(chromosome);
 }
 
+// Generate empty chromosome
+void generateEmptyChromosome(Chromosome& chromosome) {
+    chromosome.path.resize(cities.size());
+    chromosome.fitness = 0.0;
+}
+
 // Function to perform crossover between two parent chromosomes. It uses "Ordered Crossover (OX)"
 void crossover(Chromosome& child, const Chromosome& parent1, const Chromosome& parent2) {
     std::vector<bool> visited(cities.size(), false);
@@ -294,20 +300,21 @@ int main(int argc, char** argv) {
     std::srand(std::time(nullptr));
 
     // Generate initial old population (random)
-    long initializationTime;
-    {
-        utimer timer(&initializationTime);
+    long initializationTimeRandom;
+    {   
+        utimer timer(&initializationTimeRandom);
         oldPopulation.resize(POPULATION_SIZE);
-        for (int i = 0; i < POPULATION_SIZE; ++i) {
-            generateRandomChromosome(oldPopulation[i]);
-        }
-        // Generate initial next population (empty)
+        parMap.execute(generateRandomChromosome, oldPopulation);
+        
+    }
+
+    // Generate initial next population (empty)
+    long initializationTimeEmpty;
+    {
+        utimer timer(&initializationTimeEmpty);
         nextPopulation.resize(POPULATION_SIZE);
-        for (int i = 0; i < POPULATION_SIZE; ++i) {
-            Chromosome chromosome;
-            chromosome.path.resize(cities.size());
-            nextPopulation[i] = chromosome;
-        }
+
+        parMap.execute(generateEmptyChromosome, nextPopulation);
     }    
 
     // Start evolution iterations
@@ -333,10 +340,14 @@ int main(int argc, char** argv) {
             std::swap(oldPopulation, nextPopulation);
         }
     }
+
+    std::cout << "######## THREAD TIMES ########" << std::endl;
   
     std::cout << "DISTANCE MATRIX TIME: " << distanceTime << std::endl;
-    std::cout << "POPULATION INITIALIZATION TIME: " << initializationTime << std::endl;
+    std::cout << "POPULATION INITIALIZATION TIME RANDOM: " << initializationTimeRandom << std::endl;
+    std::cout << "POPULATION INITIALIZATION TIME EMPTY: " << initializationTimeEmpty << std::endl;
     std::cout << "EVOLUTION TIME: " << evolutionTime << std::endl;
+
     std::cout << "crossover time: " << crossoverTime << std::endl;
     std::cout << "mutation time: " << mutationTime << std::endl;
     std::cout << "fitness time: " << fitnessTime << std::endl;

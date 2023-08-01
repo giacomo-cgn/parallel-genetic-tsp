@@ -4,22 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include "utimer.h"
-
-
-// City struct
-struct City {
-    int id;
-    float x;
-    float y;
-};
-
-// Chromosome struct
-struct Chromosome {
-    std::vector<int> path;
-    float fitness;
-
-    Chromosome() : fitness(0.0) {}
-};
+#include "utils.h"
 
 // Function to calculate the distance between two cities
 float calculateDistance(const City& city1, const City& city2) {
@@ -115,7 +100,7 @@ void mutate(Chromosome& chromosome, const float mutation_rate, const std::vector
 // Function to generate a child chromosome from two parent chromosomes
 void generateChild(Chromosome& child, const std::vector<Chromosome> oldPopulation, const int numBestParents,
  const float mutation_rate, const std::vector<City>& cities, const std::vector<std::vector<float>>& adjacencyMatrix,
- long* crossoverTime=nullptr, long* mutationTime=nullptr, long* fitnessTime=nullptr) {
+ long* crossoverTime, long* mutationTime, long* fitnessTime) {
     // Choose 2 random parents from oldPopulation up to numBestParents
     int parentIndex1 = std::rand() % numBestParents;
     int parentIndex2 = std::rand() % numBestParents;

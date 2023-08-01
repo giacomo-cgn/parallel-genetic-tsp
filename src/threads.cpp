@@ -81,17 +81,12 @@ class ParallelMap {
         }
 };
 
-// Constants
-const int POPULATION_SIZE = 500;
-const int NUM_ITERATIONS = 100;
-const float MUTATION_RATE = 0.1;
-const float ELITISM_RATE = 0.1;
 
 
+void experiment_threads(const int population_size, const int num_iterations, const float mutation_rate,
+                            const float elitism_rate, const std::string citiesPth, const int num_workers) {
 
-int main(int argc, char** argv) {
-
-    // Main variables
+    // Important variables
     std::vector<City> cities;
     std::vector<Chromosome> oldPopulation;
     std::vector<Chromosome> nextPopulation;
@@ -103,16 +98,8 @@ int main(int argc, char** argv) {
 
     // START INITIALIZATION
 
-    int num_workers = 8;
-    // If -nw flag is passed, use the next argument as the number of workers
-    if (argc > 1 && std::string(argv[1]) == "-nw") {
-        num_workers = std::stoi(argv[2]);
-    }
     // Initialize parallel map
     ParallelMap parMap(num_workers);
-
-    // Path to cities data file
-    std::string citiesPth = "data/zi929.tsp";
 
     // Read cities from file. Each row contains the x and y coordinates of a city separated by a space.
     std::ifstream file(citiesPth);
@@ -151,7 +138,7 @@ int main(int argc, char** argv) {
     long initializationTimeRandom;
     {   
         utimer timer(&initializationTimeRandom);
-        oldPopulation.resize(POPULATION_SIZE);
+        oldPopulation.resize(population_size);
         parMap.execute(generateRandomChromosome, oldPopulation, cities, adjacencyMatrix);
         
     }
@@ -160,7 +147,7 @@ int main(int argc, char** argv) {
     long initializationTimeEmpty;
     {
         utimer timer(&initializationTimeEmpty);
-        nextPopulation.resize(POPULATION_SIZE);
+        nextPopulation.resize(population_size);
 
         parMap.execute(generateEmptyChromosome, nextPopulation, cities);
     }    
@@ -170,8 +157,8 @@ int main(int argc, char** argv) {
     {
         utimer timer(&evolutionTime);
 
-        for (int i = 0; i < NUM_ITERATIONS; ++i) {
-            int numBestParents = POPULATION_SIZE * ELITISM_RATE;
+        for (int i = 0; i < num_iterations; ++i) {
+            int numBestParents = population_size * elitism_rate;
             // Sort the population in descending order based on fitness
             std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
                 return a.fitness > b.fitness;
@@ -181,7 +168,7 @@ int main(int argc, char** argv) {
             std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
 
             // Iterate over each chromosome in the next population and generate a child
-            parMap.execute(generateChild, nextPopulation, oldPopulation, numBestParents, MUTATION_RATE, cities,
+            parMap.execute(generateChild, nextPopulation, oldPopulation, numBestParents, mutation_rate, cities,
                         adjacencyMatrix, &crossoverTime, &mutationTime, &fitnessTime);
     
 
@@ -214,5 +201,4 @@ int main(int argc, char** argv) {
     }
     std::cout << std::endl;
 
-    return 0;
 }

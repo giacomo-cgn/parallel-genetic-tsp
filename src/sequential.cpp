@@ -9,16 +9,10 @@
 #include "utils.h"
 
 
-// Constants
-const int POPULATION_SIZE = 1000;
-const int NUM_ITERATIONS = 50;
-const float MUTATION_RATE = 0.02;
-const float ELITISM_RATE = 0.1;
+void experiment_sequential(const int population_size, const int num_iterations, const float mutation_rate,
+                            const float elitism_rate, const std::string citiesPth) {
 
-
-int main(int argc, char** argv) {
-
-    // Main variables
+    // Important variables
     std::vector<City> cities;
     std::vector<Chromosome> oldPopulation;
     std::vector<Chromosome> nextPopulation;
@@ -29,7 +23,6 @@ int main(int argc, char** argv) {
     long fitnessTime = 0;
 
     // START INITIALIZATION
-    std::string citiesPth = "data/zi929.tsp";
 
     // Read cities from file. Each row contains the x and y coordinates of a city separated by a space.
     std::ifstream file(citiesPth);
@@ -69,8 +62,8 @@ int main(int argc, char** argv) {
     long initializationTimeRandom;
     {
         utimer timer(&initializationTimeRandom);
-        oldPopulation.resize(POPULATION_SIZE);
-        for (int i = 0; i < POPULATION_SIZE; ++i) {
+        oldPopulation.resize(population_size);
+        for (int i = 0; i < population_size; ++i) {
             generateRandomChromosome(oldPopulation[i], cities, adjacencyMatrix);
         }
     }
@@ -79,8 +72,8 @@ int main(int argc, char** argv) {
     long initializationTimeEmpty;
     {
         utimer timer(&initializationTimeEmpty);
-        nextPopulation.resize(POPULATION_SIZE);
-        for (int i = 0; i < POPULATION_SIZE; ++i) {
+        nextPopulation.resize(population_size);
+        for (int i = 0; i < population_size; ++i) {
             generateEmptyChromosome(nextPopulation[i], cities);
         }
         
@@ -90,8 +83,8 @@ int main(int argc, char** argv) {
     long evolutionTime;
     {
         utimer timer(&evolutionTime);
-        for (int i = 0; i < NUM_ITERATIONS; ++i) {
-            int numBestParents = POPULATION_SIZE * ELITISM_RATE;
+        for (int i = 0; i < num_iterations; ++i) {
+            int numBestParents = population_size * elitism_rate;
             // Sort the population in descending order based on fitness
             std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
                 return a.fitness > b.fitness;
@@ -101,8 +94,8 @@ int main(int argc, char** argv) {
             std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
 
             // Iterate over each chromosome in the next population and generate a child
-            for (int j = 0; j < POPULATION_SIZE; ++j) {
-                generateChild(nextPopulation[j], oldPopulation, numBestParents, MUTATION_RATE, cities,
+            for (int j = 0; j < population_size; ++j) {
+                generateChild(nextPopulation[j], oldPopulation, numBestParents, mutation_rate, cities,
                             adjacencyMatrix, &crossoverTime, &mutationTime, &fitnessTime);
             }
 
@@ -136,5 +129,4 @@ int main(int argc, char** argv) {
     }
     std::cout << std::endl;
 
-    return 0;
 }

@@ -7,6 +7,7 @@
 #include <sstream>
 #include "utimer.h"
 #include "utils.h"
+#include "sequential.h"
 
 
 void experiment_sequential(const int population_size, const int num_iterations, const float mutation_rate,

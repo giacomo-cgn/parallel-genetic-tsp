@@ -30,6 +30,8 @@ include_directories(${fastflow_SOURCE_DIR})
 add_executable(ParallelGeneticTSP
     src/utimer.h
     src/utils.h
+    src/sequential.h
+    src/threads.h
     src/main.cpp 
     src/sequential.cpp
     src/threads.cpp

@@ -123,11 +123,11 @@ void experiment_threads(const int population_size, const int num_iterations, con
     });
 
     // Print the best fitness and path at the end in the old population
-    std::cout << "Best fitness at final iteration: " << oldPopulation[0].fitness << std::endl;
-    std::cout << "Best path: ";
-    for (int i = 0; i < cities.size(); ++i) {
-        std::cout << oldPopulation[0].path[i] << " ";
-    }
-    std::cout << std::endl;
+    // std::cout << "Best fitness at final iteration: " << oldPopulation[0].fitness << std::endl;
+    // std::cout << "Best path: ";
+    // for (int i = 0; i < cities.size(); ++i) {
+    //     std::cout << oldPopulation[0].path[i] << " ";
+    // }
+    // std::cout << std::endl;
 
 }

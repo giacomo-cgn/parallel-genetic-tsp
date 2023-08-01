@@ -6,6 +6,12 @@
 #include "utimer.h"
 #include "utils.h"
 
+
+// Constructor implementation for the Chromosome struct
+Chromosome::Chromosome() {
+    fitness = 0.0;
+}
+
 // Function to calculate the distance between two cities
 float calculateDistance(const City& city1, const City& city2) {
     float dx = city1.x - city2.x;

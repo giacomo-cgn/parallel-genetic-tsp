@@ -12,7 +12,6 @@
 #include <functional>
 #include "utimer.h"
 #include "utils.h"
-#include "threads.h"
 
 // Class that implements a map parallelization pattern
 class ParallelMap {

@@ -10,7 +10,6 @@
 #include <sstream>
 #include "utimer.h"
 #include "utils.h"
-#include "sequential.h"
 
 const int POPULATION_SIZE = 1000;
 const int NUM_ITERATIONS = 50;

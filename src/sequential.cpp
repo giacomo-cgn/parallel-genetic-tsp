@@ -122,12 +122,12 @@ void experiment_sequential(const int population_size, const int num_iterations, 
         return a.fitness > b.fitness;
     });
 
-    // Print the best fitness and path at the end in the old population
-    std::cout << "Best fitness at final iteration: " << oldPopulation[0].fitness << std::endl;
-    std::cout << "Best path: ";
-    for (int i = 0; i < cities.size(); ++i) {
-        std::cout << oldPopulation[0].path[i] << " ";
-    }
-    std::cout << std::endl;
+    // // Print the best fitness and path at the end in the old population
+    // std::cout << "Best fitness at final iteration: " << oldPopulation[0].fitness << std::endl;
+    // std::cout << "Best path: ";
+    // for (int i = 0; i < cities.size(); ++i) {
+    //     std::cout << oldPopulation[0].path[i] << " ";
+    // }
+    // std::cout << std::endl;
 
 }

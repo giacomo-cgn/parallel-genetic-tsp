@@ -32,9 +32,11 @@ add_executable(ParallelGeneticTSP
     src/utils.h
     src/sequential.h
     src/threads.h
+    src/ff_implementation.h
     src/main.cpp 
     src/sequential.cpp
     src/threads.cpp
+    src/ff_implementation.cpp
     src/utils.cpp
     )
 

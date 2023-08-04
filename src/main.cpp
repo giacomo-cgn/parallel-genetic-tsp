@@ -1,6 +1,7 @@
 #include <iostream>
 #include "sequential.h"
 #include "threads.h"
+#include "ff_implementation.h"
 
 
 int main(int, char**){
@@ -20,6 +21,9 @@ int main(int, char**){
 
     std::cout << "######### EXPERIMENT THREADS ##########\n";
     experiment_threads(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, NUM_WORKERS);
+
+    std::cout << "######### EXPERIMENT FASTFLOW ##########\n";
+    experiment_ff(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, NUM_WORKERS);
 
     return 0;
 }

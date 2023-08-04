@@ -5,14 +5,14 @@
 #include <mutex>
 #include <fstream>
 #include <sstream>
-#include <thread>
-#include <functional>
 #include "utimer.h"
 #include "utils.h"
-#include "threads.h"
+#include "ff_implementation.h"
+#include <ff/parallel_for.hpp>
 
 
-void experiment_threads(const int population_size, const int num_iterations, const float mutation_rate,
+
+void experiment_ff(const int population_size, const int num_iterations, const float mutation_rate,
                             const float elitism_rate, const std::string citiesPth, const int num_workers) {
 
     // Important variables
@@ -26,9 +26,6 @@ void experiment_threads(const int population_size, const int num_iterations, con
     long fitnessTime = 0;
 
     // START INITIALIZATION
-
-    // Initialize parallel map
-    ParallelMap parMap(num_workers);
 
     // Read cities from file. Each row contains the x and y coordinates of a city separated by a space.
     std::ifstream file(citiesPth);
@@ -49,16 +46,19 @@ void experiment_threads(const int population_size, const int num_iterations, con
         city.y = y;
         cities.push_back(city);
     }
-
+    
     // Initialize adjacency matrix
     adjacencyMatrix.resize(cities.size());
     long distanceTime;
     {
         utimer timer(&distanceTime);
-        // Calculate the distance between each pair of cities and store it in an adjacency matrix    
-        parMap.execute_save(generateDistanceRow, cities, adjacencyMatrix, cities);
-    }
 
+        ff::ParallelFor pf(num_workers);
+        // Calculate the distance between each pair of cities and store it in an adjacency matrix  
+        pf.parallel_for(0, cities.size(), 1, 0, [&](const long i) {   
+            adjacencyMatrix[i] = generateDistanceRow(cities[i], cities);
+        });
+    }
 
     // Initialize random seed
     std::srand(std::time(nullptr));
@@ -66,10 +66,13 @@ void experiment_threads(const int population_size, const int num_iterations, con
     // Generate initial old population (random)
     oldPopulation.resize(population_size);
     long initializationTimeRandom;
-    {   
+    {
         utimer timer(&initializationTimeRandom);
-        parMap.execute(generateRandomChromosome, oldPopulation, cities, adjacencyMatrix);
-        
+
+        ff::ParallelFor pf(num_workers);
+        pf.parallel_for(0, population_size, 1, 0, [&](const long i) {
+            generateRandomChromosome(oldPopulation[i], cities, adjacencyMatrix);
+        });
     }
 
     // Generate initial next population (empty)
@@ -78,14 +81,18 @@ void experiment_threads(const int population_size, const int num_iterations, con
     {
         utimer timer(&initializationTimeEmpty);
 
-        parMap.execute(generateEmptyChromosome, nextPopulation, cities);
+        ff::ParallelFor pf(num_workers);
+        pf.parallel_for(0, population_size, 1, 0, [&](const long i) {
+            generateEmptyChromosome(nextPopulation[i], cities);
+        });        
     }    
 
     // Start evolution iterations
     long evolutionTime;
     {
         utimer timer(&evolutionTime);
-
+        
+        ff::ParallelFor pf(num_workers);
         for (int i = 0; i < num_iterations; ++i) {
             int numBestParents = population_size * elitism_rate;
             // Sort the population in descending order based on fitness
@@ -97,32 +104,34 @@ void experiment_threads(const int population_size, const int num_iterations, con
             std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
 
             // Iterate over each chromosome in the next population and generate a child
-            parMap.execute(generateChild, nextPopulation, oldPopulation, numBestParents, mutation_rate, cities,
-                        adjacencyMatrix, &crossoverTime, &mutationTime, &fitnessTime);
-    
+            pf.parallel_for(0, population_size, 1, 0, [&](const long j) {
+                generateChild(nextPopulation[j], oldPopulation, numBestParents, mutation_rate, cities,
+                            adjacencyMatrix, &crossoverTime, &mutationTime, &fitnessTime);
+            });
 
             // Invert the populations for next iteration
             std::swap(oldPopulation, nextPopulation);
         }
     }
 
-    std::cout << "######## THREAD TIMES ########" << std::endl;
-  
+    std::cout << "######## FASTFLOW TIMES ########" << std::endl;
+
+    
     std::cout << "DISTANCE MATRIX TIME: " << distanceTime << std::endl;
     std::cout << "POPULATION INITIALIZATION TIME RANDOM: " << initializationTimeRandom << std::endl;
     std::cout << "POPULATION INITIALIZATION TIME EMPTY: " << initializationTimeEmpty << std::endl;
     std::cout << "EVOLUTION TIME: " << evolutionTime << std::endl;
-
     std::cout << "crossover time: " << crossoverTime << std::endl;
     std::cout << "mutation time: " << mutationTime << std::endl;
     std::cout << "fitness time: " << fitnessTime << std::endl;
+    
 
     // Final sort of the population
     std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
         return a.fitness > b.fitness;
     });
 
-    // Print the best fitness and path at the end in the old population
+    // // Print the best fitness and path at the end in the old population
     // std::cout << "Best fitness at final iteration: " << oldPopulation[0].fitness << std::endl;
     // std::cout << "Best path: ";
     // for (int i = 0; i < cities.size(); ++i) {

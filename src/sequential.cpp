@@ -45,11 +45,11 @@ void experiment_sequential(const int population_size, const int num_iterations, 
         cities.push_back(city);
     }
  
+    adjacencyMatrix.resize(cities.size());
     // Initialize adjacency matrix
     long distanceTime;
     {
         utimer timer(&distanceTime);
-        adjacencyMatrix.resize(cities.size());
         // Calculate the distance between each pair of cities and store it in an adjacency matrix    
         for (int i = 0; i < cities.size(); ++i) {     
             adjacencyMatrix[i] = generateDistanceRow(cities[i], cities);
@@ -60,20 +60,20 @@ void experiment_sequential(const int population_size, const int num_iterations, 
     std::srand(std::time(nullptr));
 
     // Generate initial old population (random)
+    oldPopulation.resize(population_size);
     long initializationTimeRandom;
     {
         utimer timer(&initializationTimeRandom);
-        oldPopulation.resize(population_size);
         for (int i = 0; i < population_size; ++i) {
             generateRandomChromosome(oldPopulation[i], cities, adjacencyMatrix);
         }
     }
 
     // Generate initial next population (empty)
+    nextPopulation.resize(population_size);
     long initializationTimeEmpty;
     {
         utimer timer(&initializationTimeEmpty);
-        nextPopulation.resize(population_size);
         for (int i = 0; i < population_size; ++i) {
             generateEmptyChromosome(nextPopulation[i], cities);
         }

@@ -106,7 +106,7 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
             // Iterate over each chromosome in the next population and generate a child
             pf.parallel_for(0, population_size, 1, 0, [&](const long j) {
                 generateChild(nextPopulation[j], oldPopulation, numBestParents, mutation_rate, cities,
-                            adjacencyMatrix, &crossoverTime, &mutationTime, &fitnessTime);
+                            adjacencyMatrix, crossoverTime, mutationTime, fitnessTime, true);
             });
 
             // Invert the populations for next iteration

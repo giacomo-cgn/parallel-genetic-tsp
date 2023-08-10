@@ -23,7 +23,7 @@ public:
 
     // Map over a vector of data
     template <typename T, typename Function, typename... Args>
-    void execute(Function&& function, std::vector<T>& data, Args... args) {
+    void execute(Function&& function, std::vector<T>& data, Args&&... args) {
         int chunk_size = data.size() / num_workers;
 
         std::vector<std::thread> threads;
@@ -37,10 +37,10 @@ public:
             } else {
                 end = start + chunk_size;
             }
-            threads.emplace_back([&function, &data, start, end, args...]() {
+            threads.emplace_back([&function, &data, start, end, &args...]() {
                 // Iterate over the chunk in each thread
                 for (int j = start; j < end; j++) {
-                    function(data[j], args...);
+                    function(data[j], std::forward<Args>(args)...);
                 }
             });
         }
@@ -52,7 +52,7 @@ public:
 
     // Map over a vector of input data and save the results in a vector of output data
     template <typename T, typename U, typename Function, typename... Args>
-    void execute_save(Function&& function, std::vector<T>& input, std::vector<U>& output, Args... args) {
+    void execute_save(Function&& function, std::vector<T>& input, std::vector<U>& output, Args&&... args) {
         int chunk_size = input.size() / num_workers;
 
         std::vector<std::thread> threads;
@@ -66,10 +66,10 @@ public:
             } else {
                 end = start + chunk_size;
             }
-            threads.emplace_back([&function, &input, &output, start, end, args...]() {
+            threads.emplace_back([&function, &input, &output, start, end, &args...]() {
                 // Iterate over the chunk in each thread
                 for (int j = start; j < end; j++) {
-                    output[j] = function(input[j], args...);
+                    output[j] = function(input[j], std::forward<Args>(args)...);
                 }
             });
         }

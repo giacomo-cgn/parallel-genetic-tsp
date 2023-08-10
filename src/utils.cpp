@@ -106,7 +106,7 @@ void mutate(Chromosome& chromosome, const float mutation_rate, const std::vector
 // Function to generate a child chromosome from two parent chromosomes
 void generateChild(Chromosome& child, const std::vector<Chromosome> oldPopulation, const int numBestParents,
  const float mutation_rate, const std::vector<City>& cities, const std::vector<std::vector<float>>& adjacencyMatrix,
- long* crossoverTime, long* mutationTime, long* fitnessTime) {
+ long& crossoverTime, long& mutationTime, long& fitnessTime, bool recordTimes) {
     // Choose 2 random parents from oldPopulation up to numBestParents
     int parentIndex1 = std::rand() % numBestParents;
     int parentIndex2 = std::rand() % numBestParents;
@@ -114,7 +114,7 @@ void generateChild(Chromosome& child, const std::vector<Chromosome> oldPopulatio
     const Chromosome& parent2 = oldPopulation[parentIndex2];
 
 
-    if (crossoverTime != nullptr && mutationTime != nullptr && fitnessTime != nullptr) {
+    if (recordTimes) {
         // Perform crossover and mutation to create a new child recording times
         long t;
         {

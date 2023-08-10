@@ -98,7 +98,7 @@ void experiment_threads(const int population_size, const int num_iterations, con
 
             // Iterate over each chromosome in the next population and generate a child
             parMap.execute(generateChild, nextPopulation, oldPopulation, numBestParents, mutation_rate, cities,
-                        adjacencyMatrix, &crossoverTime, &mutationTime, &fitnessTime);
+                        adjacencyMatrix, crossoverTime, mutationTime, fitnessTime, true);
     
 
             // Invert the populations for next iteration

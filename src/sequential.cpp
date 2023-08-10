@@ -97,7 +97,7 @@ void experiment_sequential(const int population_size, const int num_iterations, 
             // Iterate over each chromosome in the next population and generate a child
             for (int j = 0; j < population_size; ++j) {
                 generateChild(nextPopulation[j], oldPopulation, numBestParents, mutation_rate, cities,
-                            adjacencyMatrix, &crossoverTime, &mutationTime, &fitnessTime);
+                            adjacencyMatrix, crossoverTime, mutationTime, fitnessTime, true);
             }
 
             // Invert the populations for next iteration

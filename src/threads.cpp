@@ -49,7 +49,7 @@ void experiment_threads(const int population_size, const int num_iterations, con
     long distanceTime;
     long initializationTimeRandom;
     long initializationTimeEmpty;
-    long evolutionTime;
+    long evolutionTime = 0;
     // Internal times in evolutionTime
     long crossoverTime = 0;
     long mutationTime = 0;
@@ -87,27 +87,27 @@ void experiment_threads(const int population_size, const int num_iterations, con
         }    
 
         // Start evolution iterations
-        {
-            utimer timer(&evolutionTime);
-
-            for (int i = 0; i < num_iterations; ++i) {
+        for (int i = 0; i < num_iterations; ++i) {
                 int numBestParents = population_size * elitism_rate;
-                // Sort the population in descending order based on fitness
-                std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
-                    return a.fitness > b.fitness;
-                });
+            // Sort the population in descending order based on fitness
+            std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
+                return a.fitness > b.fitness;
+            });
 
-                // print the best fitness in the old population
-                std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
+            std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
+
+            long t;
+            {
+                utimer timer(&t);
 
                 // Iterate over each chromosome in the next population and generate a child
                 parMap.execute(generateChild, nextPopulation, oldPopulation, numBestParents, mutation_rate, cities,
-                            adjacencyMatrix, crossoverTime, mutationTime, fitnessTime, recordInternalTimes);
-        
-
-                // Invert the populations for next iteration
-                std::swap(oldPopulation, nextPopulation);
+                        adjacencyMatrix, crossoverTime, mutationTime, fitnessTime, recordInternalTimes);
             }
+            evolutionTime += t;
+
+            // Invert the populations for next iteration
+            std::swap(oldPopulation, nextPopulation);
         }
     }
 

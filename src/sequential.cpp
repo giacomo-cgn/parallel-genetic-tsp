@@ -44,7 +44,7 @@ void experiment_sequential(const int population_size, const int num_iterations, 
     long distanceTime;
     long initializationTimeRandom;
     long initializationTimeEmpty;
-    long evolutionTime;
+    long evolutionTime = 0;
     // Internal times in evolutionTime
     long crossoverTime = 0;
     long mutationTime = 0;
@@ -87,28 +87,31 @@ void experiment_sequential(const int population_size, const int num_iterations, 
         }    
 
         // Start evolution iterations
-        {
-            utimer timer(&evolutionTime);
-            for (int i = 0; i < num_iterations; ++i) {
-                int numBestParents = population_size * elitism_rate;
-                // Sort the population in descending order based on fitness
-                std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
-                    return a.fitness > b.fitness;
-                });
+        for (int i = 0; i < num_iterations; ++i) {
+            int numBestParents = population_size * elitism_rate;
+            // Sort the population in descending order based on fitness
+            std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
+                return a.fitness > b.fitness;
+            });
 
-                // print the best fitness in the old population
-                std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
+            std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
+
+            long t;
+            {
+                utimer timer(&t);
 
                 // Iterate over each chromosome in the next population and generate a child
                 for (int j = 0; j < population_size; ++j) {
-                    generateChild(nextPopulation[j], oldPopulation, numBestParents, mutation_rate, cities,
-                                adjacencyMatrix, crossoverTime, mutationTime, fitnessTime, recordInternalTimes);
+                generateChild(nextPopulation[j], oldPopulation, numBestParents, mutation_rate, cities,
+                            adjacencyMatrix, crossoverTime, mutationTime, fitnessTime, recordInternalTimes);
                 }
-
-                // Invert the populations for next iteration
-                std::swap(oldPopulation, nextPopulation);
             }
-        }
+            evolutionTime += t;            
+
+            // Invert the populations for next iteration
+            std::swap(oldPopulation, nextPopulation);
+            }
+        
     }
 
     std::cout << "######## SEQUENTIAL TIMES ########" << std::endl;

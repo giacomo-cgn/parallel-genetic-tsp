@@ -116,23 +116,27 @@ void generateChild(Chromosome& child, const std::vector<Chromosome> oldPopulatio
 
     if (recordTimes) {
         // Perform crossover and mutation to create a new child recording times
-        long t;
+        long t1;
         {
-            utimer timer(&t);
+            utimer timer(&t1);
             crossover(child, parent1, parent2, cities);
 
         }
-        crossoverTime += t;
+        crossoverTime += t1;
+
+        long t2;
         {
-            utimer timer(&t);
+            utimer timer(&t2);
             mutate(child, mutation_rate, cities);
         }
-        mutationTime += t;
+        mutationTime += t2;
+
+        long t3;
         {
-            utimer timer(&t);
+            utimer timer(&t3);
             child.fitness = calculateFitness(child, cities, adjacencyMatrix);
         }
-        fitnessTime += t;
+        fitnessTime += t3;
     }
     else {
         // Perform crossover and mutation to create a new child without recording times

@@ -13,7 +13,7 @@
 
 
 void experiment_ff(const int population_size, const int num_iterations, const float mutation_rate,
-                            const float elitism_rate, const std::string citiesPth, const int num_workers) {
+                            const float elitism_rate, const std::string citiesPth, const int num_workers, bool recordInternalTimes) {
 
     // Important variables
     std::vector<City> cities;
@@ -21,11 +21,6 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
     std::vector<Chromosome> nextPopulation;
     std::vector<std::vector<float>> adjacencyMatrix;
 
-    long crossoverTime = 0;
-    long mutationTime = 0;
-    long fitnessTime = 0;
-
-    // START INITIALIZATION
 
     // Read cities from file. Each row contains the x and y coordinates of a city separated by a space.
     std::ifstream file(citiesPth);
@@ -46,72 +41,87 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
         city.y = y;
         cities.push_back(city);
     }
-    
-    // Initialize adjacency matrix
-    adjacencyMatrix.resize(cities.size());
+
+    long totalTime;
     long distanceTime;
-    {
-        utimer timer(&distanceTime);
-
-        ff::ParallelFor pf(num_workers);
-        // Calculate the distance between each pair of cities and store it in an adjacency matrix  
-        pf.parallel_for(0, cities.size(), 1, 0, [&](const long i) {   
-            adjacencyMatrix[i] = generateDistanceRow(cities[i], cities);
-        });
-    }
-
-    // Initialize random seed
-    std::srand(std::time(nullptr));
-
-    // Generate initial old population (random)
-    oldPopulation.resize(population_size);
     long initializationTimeRandom;
-    {
-        utimer timer(&initializationTimeRandom);
-
-        ff::ParallelFor pf(num_workers);
-        pf.parallel_for(0, population_size, 1, 0, [&](const long i) {
-            generateRandomChromosome(oldPopulation[i], cities, adjacencyMatrix);
-        });
-    }
-
-    // Generate initial next population (empty)
-    nextPopulation.resize(population_size);
     long initializationTimeEmpty;
-    {
-        utimer timer(&initializationTimeEmpty);
-
-        ff::ParallelFor pf(num_workers);
-        pf.parallel_for(0, population_size, 1, 0, [&](const long i) {
-            generateEmptyChromosome(nextPopulation[i], cities);
-        });        
-    }    
-
-    // Start evolution iterations
     long evolutionTime;
+    // Internal times in evolutionTime
+    long crossoverTime = 0;
+    long mutationTime = 0;
+    long fitnessTime = 0;
+
     {
-        utimer timer(&evolutionTime);
+        utimer timer(&totalTime);
+    
+    
+        // Initialize adjacency matrix
+        adjacencyMatrix.resize(cities.size());
         
-        ff::ParallelFor pf(num_workers);
-        for (int i = 0; i < num_iterations; ++i) {
-            int numBestParents = population_size * elitism_rate;
-            // Sort the population in descending order based on fitness
-            std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
-                return a.fitness > b.fitness;
+        {
+            utimer timer(&distanceTime);
+
+            ff::ParallelFor pf(num_workers);
+            // Calculate the distance between each pair of cities and store it in an adjacency matrix  
+            pf.parallel_for(0, cities.size(), 1, 0, [&](const long i) {   
+                adjacencyMatrix[i] = generateDistanceRow(cities[i], cities);
             });
-
-            // print the best fitness in the old population
-            std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
-
-            // Iterate over each chromosome in the next population and generate a child
-            pf.parallel_for(0, population_size, 1, 0, [&](const long j) {
-                generateChild(nextPopulation[j], oldPopulation, numBestParents, mutation_rate, cities,
-                            adjacencyMatrix, crossoverTime, mutationTime, fitnessTime, true);
-            });
-
-            // Invert the populations for next iteration
-            std::swap(oldPopulation, nextPopulation);
         }
+
+        // Initialize random seed
+        std::srand(std::time(nullptr));
+
+        // Generate initial old population (random)
+        oldPopulation.resize(population_size);
+        
+        {
+            utimer timer(&initializationTimeRandom);
+
+            ff::ParallelFor pf(num_workers);
+            pf.parallel_for(0, population_size, 1, 0, [&](const long i) {
+                generateRandomChromosome(oldPopulation[i], cities, adjacencyMatrix);
+            });
+        }
+
+        // Generate initial next population (empty)
+        nextPopulation.resize(population_size);
+        
+        {
+            utimer timer(&initializationTimeEmpty);
+
+            ff::ParallelFor pf(num_workers);
+            pf.parallel_for(0, population_size, 1, 0, [&](const long i) {
+                generateEmptyChromosome(nextPopulation[i], cities);
+            });        
+        }    
+
+        // Start evolution iterations
+        {
+            utimer timer(&evolutionTime);
+            
+            ff::ParallelFor pf(num_workers);
+            for (int i = 0; i < num_iterations; ++i) {
+                int numBestParents = population_size * elitism_rate;
+                // Sort the population in descending order based on fitness
+                std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
+                    return a.fitness > b.fitness;
+                });
+
+                // print the best fitness in the old population
+                std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
+
+                // Iterate over each chromosome in the next population and generate a child
+                pf.parallel_for(0, population_size, 1, 0, [&](const long j) {
+                    generateChild(nextPopulation[j], oldPopulation, numBestParents, mutation_rate, cities,
+                                adjacencyMatrix, crossoverTime, mutationTime, fitnessTime, recordInternalTimes);
+                });
+
+                // Invert the populations for next iteration
+                std::swap(oldPopulation, nextPopulation);
+            }
+        }
+
     }
 
     std::cout << "######## FASTFLOW TIMES ########" << std::endl;
@@ -121,22 +131,24 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
     std::cout << "POPULATION INITIALIZATION TIME RANDOM: " << initializationTimeRandom << std::endl;
     std::cout << "POPULATION INITIALIZATION TIME EMPTY: " << initializationTimeEmpty << std::endl;
     std::cout << "EVOLUTION TIME: " << evolutionTime << std::endl;
+    std::cout << "TOTAL TIME: " << totalTime << std::endl;
     std::cout << "crossover time: " << crossoverTime << std::endl;
     std::cout << "mutation time: " << mutationTime << std::endl;
     std::cout << "fitness time: " << fitnessTime << std::endl;
     
 
-    // Final sort of the population
-    std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
-        return a.fitness > b.fitness;
-    });
+    // Find final best fitness
+    float maxFitness = oldPopulation[0].fitness;
+    for (int i = 0; i < population_size; ++i) {
+        if (oldPopulation[i].fitness > maxFitness) {
+            maxFitness = oldPopulation[i].fitness;
+        }
+    }
 
-    // // Print the best fitness and path at the end in the old population
-    // std::cout << "Best fitness at final iteration: " << oldPopulation[0].fitness << std::endl;
-    // std::cout << "Best path: ";
-    // for (int i = 0; i < cities.size(); ++i) {
-    //     std::cout << oldPopulation[0].path[i] << " ";
-    // }
-    // std::cout << std::endl;
+    // Save the best fitness and times in a .csv in ../results
+    std::ofstream resultsFile;
+    resultsFile.open("../results/ff_results.csv", std::ios_base::app);
+    resultsFile << "maxFitness,totalTime,distanceTime,initializationTimeRandom,initializationTimeEmpty,evolutionTime,crossoverTime,mutationTime,fitnessTime" << std::endl;
+    resultsFile << maxFitness << "," << totalTime << "," << distanceTime << "," << initializationTimeRandom << "," << initializationTimeEmpty << "," << evolutionTime << "," << crossoverTime << "," << mutationTime << "," << fitnessTime << std::endl;
 
 }

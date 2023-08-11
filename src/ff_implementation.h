@@ -13,6 +13,6 @@
 #include "ff/parallel_for.hpp"
 
 void experiment_ff(const int population_size, const int num_iterations, const float mutation_rate,
-                            const float elitism_rate, const std::string citiesPth, int num_workers);
+                            const float elitism_rate, const std::string citiesPth, int num_workers, bool recordInternalTimes);
 
 #endif

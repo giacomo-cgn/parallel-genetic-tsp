@@ -1,0 +1,2 @@
+maxFitness,totalTime,distanceTime,initializationTimeRandom,initializationTimeEmpty,evolutionTime,crossoverTime,mutationTime,fitnessTime
+5.40613e-07,115247851,20706,96940,3981,115126081,4642142,15776,1857399

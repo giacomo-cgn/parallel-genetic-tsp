@@ -82,6 +82,6 @@ public:
 
 // Function to execute the genetic algorithm using multiple threads
 void experiment_threads(const int population_size, const int num_iterations, const float mutation_rate,
-                        const float elitism_rate, const std::string citiesPth, const int num_workers);
+                        const float elitism_rate, const std::string citiesPth, const int num_workers, bool recordInternalTimes);
 
 #endif

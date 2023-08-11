@@ -17,7 +17,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fastflow)
 
-# !!! Delete if causing error in CMakelists.txt of FastFlow if "pthread" error arises
+# !!! Delete lines if "pthread" error of FastFlow CMakelists.txt arises
 
 # FastFlow is header-only
 include_directories(${fastflow_SOURCE_DIR})

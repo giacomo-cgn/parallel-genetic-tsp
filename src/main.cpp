@@ -17,13 +17,13 @@ int main(int, char**){
     std::cout << "######### STARTING EXPERIMENTS ##########\n";
 
     std::cout << "######### EXPERIMENT SEQUENTIAL ##########\n";
-    experiment_sequential(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH);
+    experiment_sequential(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, true);
 
     std::cout << "######### EXPERIMENT THREADS ##########\n";
-    experiment_threads(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, NUM_WORKERS);
+    experiment_threads(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, NUM_WORKERS, false);
 
     std::cout << "######### EXPERIMENT FASTFLOW ##########\n";
-    experiment_ff(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, NUM_WORKERS);
+    experiment_ff(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, NUM_WORKERS, false);
 
     return 0;
 }

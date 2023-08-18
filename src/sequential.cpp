@@ -11,7 +11,8 @@
 
 
 void experiment_sequential(const int population_size, const int num_iterations, const float mutation_rate,
-                            const float elitism_rate, const std::string citiesPth, bool recordInternalTimes) {
+                            const float elitism_rate, const std::string citiesPth, bool recordInternalTimes,
+                            bool printIterations) {
 
     // Important variables
     std::vector<City> cities;
@@ -93,8 +94,10 @@ void experiment_sequential(const int population_size, const int num_iterations, 
             std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
                 return a.fitness > b.fitness;
             });
-
-            std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
+            
+            if (printIterations) {
+                std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
+            }
 
             long t;
             {
@@ -137,7 +140,9 @@ void experiment_sequential(const int population_size, const int num_iterations, 
     // Save the best fitness and times in a .csv in ../results
     std::ofstream resultsFile;
     resultsFile.open("../results/sequential_results.csv", std::ios_base::app);
-    resultsFile << "maxFitness,totalTime,distanceTime,initializationTimeRandom,initializationTimeEmpty,evolutionTime,crossoverTime,mutationTime,fitnessTime" << std::endl;
+    if (resultsFile.tellp() == 0) {
+        resultsFile << "maxFitness,totalTime,distanceTime,initializationTimeRandom,initializationTimeEmpty,evolutionTime,crossoverTime,mutationTime,fitnessTime" << std::endl;
+    }
     resultsFile << maxFitness << "," << totalTime << "," << distanceTime << "," << initializationTimeRandom << "," << initializationTimeEmpty << "," << evolutionTime << "," << crossoverTime << "," << mutationTime << "," << fitnessTime << std::endl;
 
 }

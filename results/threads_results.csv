@@ -1,2 +1,8 @@
-maxFitness,totalTime,distanceTime,initializationTimeRandom,initializationTimeEmpty,evolutionTime,crossoverTime,mutationTime,fitnessTime
-5.45612e-07,9313189,6131,599134,7548,8634642,0,0,0
+numWorkers,maxFitness,totalTime,distanceTime,initializationTimeRandom,initializationTimeEmpty,evolutionTime,crossoverTime,mutationTime,fitnessTime
+1,5.41893e-07,15246824,7198,38742,2226,15174179,0,0,0
+2,5.37762e-07,7814099,3635,61201,1253,7723158,0,0,0
+4,5.2927e-07,4625236,1975,108335,1195,4482539,0,0,0
+8,5.49655e-07,4333902,2600,179517,1613,4119529,0,0,0
+16,5.45549e-07,4643774,2844,170708,2527,4440630,0,0,0
+32,5.3395e-07,4563343,1657,205971,2477,4321753,0,0,0
+64,5.39791e-07,5043602,1898,185649,2617,4822487,0,0,0

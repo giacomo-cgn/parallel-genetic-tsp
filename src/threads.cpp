@@ -13,7 +13,8 @@
 
 
 void experiment_threads(const int population_size, const int num_iterations, const float mutation_rate,
-                            const float elitism_rate, const std::string citiesPth, const int num_workers, bool recordInternalTimes) {
+                            const float elitism_rate, const std::string citiesPth, const int numWorkers, bool recordInternalTimes,
+                            bool printIterations) {
 
     // Important variables
     std::vector<City> cities;
@@ -23,7 +24,7 @@ void experiment_threads(const int population_size, const int num_iterations, con
 
 
     // Initialize parallel map
-    ParallelMap parMap(num_workers);
+    ParallelMap parMap(numWorkers);
 
     // Read cities from file. Each row contains the x and y coordinates of a city separated by a space.
     std::ifstream file(citiesPth);
@@ -94,8 +95,10 @@ void experiment_threads(const int population_size, const int num_iterations, con
                 return a.fitness > b.fitness;
             });
 
-            std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
-
+            if (printIterations) {
+                std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
+            }
+            
             long t;
             {
                 utimer timer(&t);
@@ -133,7 +136,9 @@ void experiment_threads(const int population_size, const int num_iterations, con
     // Save the best fitness and times in a .csv in ../results
     std::ofstream resultsFile;
     resultsFile.open("../results/threads_results.csv", std::ios_base::app);
-    resultsFile << "maxFitness,totalTime,distanceTime,initializationTimeRandom,initializationTimeEmpty,evolutionTime,crossoverTime,mutationTime,fitnessTime" << std::endl;
-    resultsFile << maxFitness << "," << totalTime << "," << distanceTime << "," << initializationTimeRandom << "," << initializationTimeEmpty << "," << evolutionTime << "," << crossoverTime << "," << mutationTime << "," << fitnessTime << std::endl;
+    if (resultsFile.tellp() == 0) {
+        resultsFile << "numWorkers,maxFitness,totalTime,distanceTime,initializationTimeRandom,initializationTimeEmpty,evolutionTime,crossoverTime,mutationTime,fitnessTime" << std::endl;
+    }
+    resultsFile << numWorkers << "," << maxFitness << "," << totalTime << "," << distanceTime << "," << initializationTimeRandom << "," << initializationTimeEmpty << "," << evolutionTime << "," << crossoverTime << "," << mutationTime << "," << fitnessTime << std::endl;
 
     }

@@ -13,7 +13,8 @@
 
 
 void experiment_ff(const int population_size, const int num_iterations, const float mutation_rate,
-                            const float elitism_rate, const std::string citiesPth, const int num_workers, bool recordInternalTimes) {
+                            const float elitism_rate, const std::string citiesPth, const int numWorkers, bool recordInternalTimes,
+                            bool printIterations) {
 
     // Important variables
     std::vector<City> cities;
@@ -62,7 +63,7 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
         {
             utimer timer(&distanceTime);
 
-            ff::ParallelFor pf(num_workers);
+            ff::ParallelFor pf(numWorkers);
             // Calculate the distance between each pair of cities and store it in an adjacency matrix  
             pf.parallel_for(0, cities.size(), 1, 0, [&](const long i) {   
                 adjacencyMatrix[i] = generateDistanceRow(cities[i], cities);
@@ -78,7 +79,7 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
         {
             utimer timer(&initializationTimeRandom);
 
-            ff::ParallelFor pf(num_workers);
+            ff::ParallelFor pf(numWorkers);
             pf.parallel_for(0, population_size, 1, 0, [&](const long i) {
                 generateRandomChromosome(oldPopulation[i], cities, adjacencyMatrix);
             });
@@ -90,14 +91,14 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
         {
             utimer timer(&initializationTimeEmpty);
 
-            ff::ParallelFor pf(num_workers);
+            ff::ParallelFor pf(numWorkers);
             pf.parallel_for(0, population_size, 1, 0, [&](const long i) {
                 generateEmptyChromosome(nextPopulation[i], cities);
             });        
         }    
 
         // Start evolution iterations     
-        ff::ParallelFor pf(num_workers);
+        ff::ParallelFor pf(numWorkers);
         for (int i = 0; i < num_iterations; ++i) {
             int numBestParents = population_size * elitism_rate;
             // Sort the population in descending order based on fitness
@@ -105,8 +106,9 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
                 return a.fitness > b.fitness;
             });
 
-            // print the best fitness in the old population
-            std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
+            if (printIterations) {
+                std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
+            }
 
             long t;
             {
@@ -150,7 +152,10 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
     // Save the best fitness and times in a .csv in ../results
     std::ofstream resultsFile;
     resultsFile.open("../results/ff_results.csv", std::ios_base::app);
-    resultsFile << "maxFitness,totalTime,distanceTime,initializationTimeRandom,initializationTimeEmpty,evolutionTime,crossoverTime,mutationTime,fitnessTime" << std::endl;
-    resultsFile << maxFitness << "," << totalTime << "," << distanceTime << "," << initializationTimeRandom << "," << initializationTimeEmpty << "," << evolutionTime << "," << crossoverTime << "," << mutationTime << "," << fitnessTime << std::endl;
+    // If not present, write header with column names
+    if (resultsFile.tellp() == 0) {
+        resultsFile << "numWorkers,maxFitness,totalTime,distanceTime,initializationTimeRandom,initializationTimeEmpty,evolutionTime,crossoverTime,mutationTime,fitnessTime" << std::endl;
+    }
+    resultsFile << numWorkers << "," << maxFitness << "," << totalTime << "," << distanceTime << "," << initializationTimeRandom << "," << initializationTimeEmpty << "," << evolutionTime << "," << crossoverTime << "," << mutationTime << "," << fitnessTime << std::endl;
 
 }

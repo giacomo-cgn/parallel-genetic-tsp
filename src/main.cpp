@@ -12,18 +12,20 @@ int main(int, char**){
     const float MUTATION_RATE = 0.02;
     const float ELITISM_RATE = 0.1;
     const std::string CITIES_PTH = "../data/zi929.tsp";
-    const int NUM_WORKERS = 8;
+    const int NUM_WORKER_LIST[] = {1, 2, 4, 8, 16, 32, 64};
 
     std::cout << "######### STARTING EXPERIMENTS ##########\n";
 
     std::cout << "######### EXPERIMENT SEQUENTIAL ##########\n";
-    experiment_sequential(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, true);
+    experiment_sequential(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, true, false);
 
-    std::cout << "######### EXPERIMENT THREADS ##########\n";
-    experiment_threads(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, NUM_WORKERS, false);
+    for (int numWorkers : NUM_WORKER_LIST){
+        std::cout << "######### EXPERIMENT THREADS:" << numWorkers << "##########";
+        experiment_threads(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, numWorkers, false, false);
 
-    std::cout << "######### EXPERIMENT FASTFLOW ##########\n";
-    experiment_ff(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, NUM_WORKERS, false);
+        std::cout << "######### EXPERIMENT FASTFLOW:" << numWorkers << "##########";
+        experiment_ff(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, numWorkers, false, false);
+    }
 
     return 0;
 }

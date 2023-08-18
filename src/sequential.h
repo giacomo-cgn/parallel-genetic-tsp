@@ -12,6 +12,7 @@
 #include "utils.h"
 
 void experiment_sequential(const int population_size, const int num_iterations, const float mutation_rate,
-                            const float elitism_rate, const std::string citiesPth, bool recordInternalTimes);
+                            const float elitism_rate, const std::string citiesPth, bool recordInternalTimes,
+                            bool printIterations);
 
 #endif

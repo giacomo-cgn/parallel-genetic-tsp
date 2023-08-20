@@ -12,7 +12,7 @@
 
 
 
-void experiment_ff(const int population_size, const int num_iterations, const float mutation_rate,
+void experiment_ff(const int population_size, const int numIterations, const float mutation_rate,
                             const float elitism_rate, const std::string citiesPth, const int numWorkers, bool recordInternalTimes,
                             bool printIterations) {
 
@@ -52,6 +52,8 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
     long crossoverTime = 0;
     long mutationTime = 0;
     long fitnessTime = 0;
+
+    std::vector<float> bestFitnesses(numIterations);
 
     {
         utimer timer(&totalTime);
@@ -99,7 +101,7 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
 
         // Start evolution iterations     
         ff::ParallelFor pf(numWorkers);
-        for (int i = 0; i < num_iterations; ++i) {
+        for (int i = 0; i < numIterations; ++i) {
             int numBestParents = population_size * elitism_rate;
             // Sort the population in descending order based on fitness
             std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
@@ -109,6 +111,8 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
             if (printIterations) {
                 std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
             }
+            // Save best fitness
+            bestFitnesses[i] = oldPopulation[0].fitness;
 
             long t;
             {
@@ -128,7 +132,7 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
 
     }
 
-    std::cout << "######## FASTFLOW TIMES ########" << std::endl;
+    std::cout << "######## FASTFLOW TIMES " << numWorkers <<" ########" << std::endl;
 
     
     std::cout << "DISTANCE MATRIX TIME: " << distanceTime << std::endl;
@@ -158,4 +162,12 @@ void experiment_ff(const int population_size, const int num_iterations, const fl
     }
     resultsFile << numWorkers << "," << maxFitness << "," << totalTime << "," << distanceTime << "," << initializationTimeRandom << "," << initializationTimeEmpty << "," << evolutionTime << "," << crossoverTime << "," << mutationTime << "," << fitnessTime << std::endl;
 
+    // Save the best fitnesses in a .csv in ../results. Each row has all the best fitnesses for a single run
+    std::ofstream bestFitnessesFile;
+    bestFitnessesFile.open("../results/best_fitnesses.csv", std::ios_base::app);
+    bestFitnessesFile << "fastflow" << numWorkers << ",";
+    for (int i = 0; i < numIterations; ++i) {
+        bestFitnessesFile << bestFitnesses[i] << ",";
+    }
+    bestFitnessesFile << std::endl;
 }

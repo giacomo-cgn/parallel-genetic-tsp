@@ -10,7 +10,7 @@
 #include "sequential.h"
 
 
-void experiment_sequential(const int population_size, const int num_iterations, const float mutation_rate,
+void experiment_sequential(const int population_size, const int numIterations, const float mutation_rate,
                             const float elitism_rate, const std::string citiesPth, bool recordInternalTimes,
                             bool printIterations) {
 
@@ -51,6 +51,8 @@ void experiment_sequential(const int population_size, const int num_iterations, 
     long mutationTime = 0;
     long fitnessTime = 0;
 
+    std::vector<float> bestFitnesses(numIterations);
+
     {
         utimer timer(&totalTime);
 
@@ -88,7 +90,7 @@ void experiment_sequential(const int population_size, const int num_iterations, 
         }    
 
         // Start evolution iterations
-        for (int i = 0; i < num_iterations; ++i) {
+        for (int i = 0; i < numIterations; ++i) {
             int numBestParents = population_size * elitism_rate;
             // Sort the population in descending order based on fitness
             std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
@@ -98,6 +100,8 @@ void experiment_sequential(const int population_size, const int num_iterations, 
             if (printIterations) {
                 std::cout << "Best fitness at iteration " << i-1 << ": " << oldPopulation[0].fitness << std::endl;
             }
+            // Save best fitness
+            bestFitnesses[i] = oldPopulation[0].fitness;
 
             long t;
             {
@@ -143,6 +147,16 @@ void experiment_sequential(const int population_size, const int num_iterations, 
     if (resultsFile.tellp() == 0) {
         resultsFile << "maxFitness,totalTime,distanceTime,initializationTimeRandom,initializationTimeEmpty,evolutionTime,crossoverTime,mutationTime,fitnessTime" << std::endl;
     }
-    resultsFile << maxFitness << "," << totalTime << "," << distanceTime << "," << initializationTimeRandom << "," << initializationTimeEmpty << "," << evolutionTime << "," << crossoverTime << "," << mutationTime << "," << fitnessTime << std::endl;
+    resultsFile << maxFitness << "," << totalTime << "," << distanceTime << "," << initializationTimeRandom << "," 
+        << initializationTimeEmpty << "," << evolutionTime << "," << crossoverTime << "," << mutationTime << "," << fitnessTime << std::endl;
+
+    // Save the best fitnesses in a .csv in ../results. Each row has all the best fitnesses for a single run
+    std::ofstream bestFitnessesFile;
+    bestFitnessesFile.open("../results/best_fitnesses.csv", std::ios_base::app);
+    bestFitnessesFile << "sequential" << ",";
+    for (int i = 0; i < numIterations; ++i) {
+        bestFitnessesFile << bestFitnesses[i] << ",";
+    }
+    bestFitnessesFile << std::endl;
 
 }

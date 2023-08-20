@@ -20,10 +20,10 @@ int main(int, char**){
     experiment_sequential(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, true, false);
 
     for (int numWorkers : NUM_WORKER_LIST){
-        std::cout << "######### EXPERIMENT THREADS:" << numWorkers << "##########";
+        std::cout << "######### EXPERIMENT THREADS:" << numWorkers << " ##########";
         experiment_threads(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, numWorkers, false, false);
 
-        std::cout << "######### EXPERIMENT FASTFLOW:" << numWorkers << "##########";
+        std::cout << "######### EXPERIMENT FASTFLOW:" << numWorkers << " ##########";
         experiment_ff(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, numWorkers, false, false);
     }
 

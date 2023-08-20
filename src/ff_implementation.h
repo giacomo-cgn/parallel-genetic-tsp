@@ -12,7 +12,7 @@
 #include "utils.h"
 #include "ff/parallel_for.hpp"
 
-void experiment_ff(const int population_size, const int num_iterations, const float mutation_rate,
+void experiment_ff(const int population_size, const int numIterations, const float mutation_rate,
                             const float elitism_rate, const std::string citiesPth, int numWorkers, bool recordInternalTimes,
                             bool printIterations);
 

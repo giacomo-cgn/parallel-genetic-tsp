@@ -12,7 +12,11 @@ int main(int, char**){
     const float MUTATION_RATE = 0.02;
     const float ELITISM_RATE = 0.1;
     const std::string CITIES_PTH = "../data/zi929.tsp";
-    const int NUM_WORKER_LIST[] = {1, 2, 4, 8, 16, 32, 64};
+    // generate all multiples of 2 up to 32
+    int NUM_WORKER_LIST[] = {1};
+    for (int i = 1; i <= 16; i++){
+        NUM_WORKER_LIST[i] = 2*i;
+    }
 
     std::cout << "######### STARTING EXPERIMENTS ##########\n";
 

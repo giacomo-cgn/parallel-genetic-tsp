@@ -92,7 +92,7 @@ void experiment_threads(const int population_size, const int numIterations, cons
 
         // Start evolution iterations
         for (int i = 0; i < numIterations; ++i) {
-                int numBestParents = population_size * elitism_rate;
+            int numBestParents = population_size * elitism_rate;
             // Sort the population in descending order based on fitness
             std::sort(oldPopulation.begin(), oldPopulation.end(), [](const Chromosome& a, const Chromosome& b) {
                 return a.fitness > b.fitness;

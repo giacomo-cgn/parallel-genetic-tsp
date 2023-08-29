@@ -12,16 +12,14 @@ int main(int, char**){
     const float MUTATION_RATE = 0.02;
     const float ELITISM_RATE = 0.1;
     const std::string CITIES_PTH = "../data/zi929.tsp";
-    // generate all multiples of 2 up to 32
-    int NUM_WORKER_LIST[] = {1};
-    for (int i = 1; i <= 16; i++){
-        NUM_WORKER_LIST[i] = 2*i;
-    }
+
+    const std::vector<int> NUM_WORKER_LIST = {1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 
+                                              24, 26, 28, 30, 32};
 
     std::cout << "######### STARTING EXPERIMENTS ##########\n";
 
     std::cout << "######### EXPERIMENT SEQUENTIAL ##########\n";
-    experiment_sequential(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, true, false);
+    experiment_sequential(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, false, false);
 
     for (int numWorkers : NUM_WORKER_LIST){
         std::cout << "######### EXPERIMENT THREADS:" << numWorkers << " ##########";

@@ -53,12 +53,12 @@ void experiment_sequential(const int population_size, const int numIterations, c
 
     std::vector<float> bestFitnesses(numIterations);
 
+
     {
         utimer timer(&totalTime);
 
         // Initialize adjacency matrix
         adjacencyMatrix.resize(cities.size());
-        
         {
             utimer timer(&distanceTime);
             // Calculate the distance between each pair of cities and store it in an adjacency matrix    
@@ -109,7 +109,7 @@ void experiment_sequential(const int population_size, const int numIterations, c
 
                 // Iterate over each chromosome in the next population and generate a child
                 for (int j = 0; j < population_size; ++j) {
-                generateChild(nextPopulation[j], oldPopulation, numBestParents, mutation_rate, cities,
+                    generateChild(nextPopulation[j], oldPopulation, numBestParents, mutation_rate, cities,
                             adjacencyMatrix, crossoverTime, mutationTime, fitnessTime, recordInternalTimes);
                 }
             }
@@ -117,7 +117,7 @@ void experiment_sequential(const int population_size, const int numIterations, c
 
             // Invert the populations for next iteration
             std::swap(oldPopulation, nextPopulation);
-            }
+        }
         
     }
 

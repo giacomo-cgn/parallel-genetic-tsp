@@ -53,6 +53,10 @@ void experiment_ff(const int population_size, const int numIterations, const flo
     long mutationTime = 0;
     long fitnessTime = 0;
 
+    // Initialize parallel_for
+    ff::ParallelFor pf(numWorkers);
+
+
     std::vector<float> bestFitnesses(numIterations);
 
     {
@@ -65,7 +69,6 @@ void experiment_ff(const int population_size, const int numIterations, const flo
         {
             utimer timer(&distanceTime);
 
-            ff::ParallelFor pf(numWorkers);
             // Calculate the distance between each pair of cities and store it in an adjacency matrix  
             pf.parallel_for(0, cities.size(), 1, 0, [&](const long i) {   
                 adjacencyMatrix[i] = generateDistanceRow(cities[i], cities);
@@ -93,14 +96,12 @@ void experiment_ff(const int population_size, const int numIterations, const flo
         {
             utimer timer(&initializationTimeEmpty);
 
-            ff::ParallelFor pf(numWorkers);
             pf.parallel_for(0, population_size, 1, 0, [&](const long i) {
                 generateEmptyChromosome(nextPopulation[i], cities);
             });        
         }    
 
         // Start evolution iterations     
-        ff::ParallelFor pf(numWorkers);
         for (int i = 0; i < numIterations; ++i) {
             int numBestParents = population_size * elitism_rate;
             // Sort the population in descending order based on fitness

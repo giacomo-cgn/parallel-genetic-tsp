@@ -18,15 +18,34 @@ int main(int, char**){
 
     std::cout << "######### STARTING EXPERIMENTS ##########\n";
 
+    auto start1 = std::chrono::high_resolution_clock::now();
+    std::cout << "######### EXPERIMENT SEQUENTIAL ##########\n";
+    experiment_sequential(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, true, false);
+    auto end1 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff1 = end1-start1;
+    std::cout << "Total time seq: " << diff1.count() << " s\n";
+
+    auto start = std::chrono::high_resolution_clock::now();
     std::cout << "######### EXPERIMENT SEQUENTIAL ##########\n";
     experiment_sequential(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, false, false);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff = end-start;
+    std::cout << "Total time seq: " << diff.count() << " s\n";
 
     for (int numWorkers : NUM_WORKER_LIST){
-        std::cout << "######### EXPERIMENT THREADS:" << numWorkers << " ##########";
+        auto start = std::chrono::high_resolution_clock::now();
+        std::cout << "######### EXPERIMENT THREADS:" << numWorkers << " ##########\n";
         experiment_threads(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, numWorkers, false, false);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> diff = end-start;
+        std::cout << "Total time threads: " << diff.count() << " s\n";
 
-        std::cout << "######### EXPERIMENT FASTFLOW:" << numWorkers << " ##########";
+        auto start_ff = std::chrono::high_resolution_clock::now();
+        std::cout << "######### EXPERIMENT FASTFLOW:" << numWorkers << " ##########\n";
         experiment_ff(POPULATION_SIZE, NUM_ITERATIONS, MUTATION_RATE, ELITISM_RATE, CITIES_PTH, numWorkers, false, false);
+        auto end_ff = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> diff_ff = end_ff-start_ff;
+        std::cout << "Total time ff: " << diff_ff.count() << " s\n";
     }
 
     return 0;

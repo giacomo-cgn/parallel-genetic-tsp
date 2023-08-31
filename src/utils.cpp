@@ -64,7 +64,6 @@ void generateEmptyChromosome(Chromosome& chromosome, const std::vector<City>& ci
 
 // Function to perform crossover between two parent chromosomes. It uses "Ordered Crossover (OX)"
 void crossover(Chromosome& child, const Chromosome& parent1, const Chromosome& parent2, const std::vector<City>& cities) {
-    std::vector<bool> visited(cities.size(), false);
 
     // Select a random subset of the parent 1's path
     int randA = std::rand() % cities.size();
@@ -73,22 +72,35 @@ void crossover(Chromosome& child, const Chromosome& parent1, const Chromosome& p
     int endPos = std::max(randA, randB);
 
     // Copy the subset of parent 1's path to the child's path
-    for (int i = startPos; i <= endPos; ++i) {
+    for (int i = startPos; i < endPos; ++i) {
         child.path[i] = parent1.path[i];
-        visited[child.path[i]] = true;
     }
 
     // Fill the rest of the child's path with the remaining cities from parent 2, in order left to right
     int parent2Pos = 0;
-    for (int i = 0; i < cities.size(); ++i) {
-        if (parent2Pos == startPos)
-            parent2Pos = endPos + 1;
+    int childPos = 0;
+    bool found;
 
-        if (!visited[parent2.path[i]]) {
-            child.path[parent2Pos] = parent2.path[i];
-            visited[parent2.path[i]] = true;
-            ++parent2Pos;
+    while (parent2Pos < cities.size() && childPos < cities.size()) {
+        if (childPos == startPos) {
+            childPos = endPos;
         }
+        
+        // Search current parent2 element in portion copied from parent1
+        found = false;
+        for (int j = startPos; j < endPos; ++j) {
+            if (child.path[childPos] == parent2.path[parent2Pos]) {
+                found = true;
+                
+            }
+        }
+
+        if (!found) {
+            child.path[childPos] = parent2.path[parent2Pos];
+            ++childPos;
+        }
+        ++parent2Pos;
+
     }
 }
 

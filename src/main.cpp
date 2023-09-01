@@ -8,7 +8,7 @@ int main(int, char**){
 
     // Constants
     const int POPULATION_SIZE = 1000;
-    const int NUM_ITERATIONS = 50;
+    const int NUM_ITERATIONS = 100;
     const float MUTATION_RATE = 0.02;
     const float ELITISM_RATE = 0.1;
     const std::string CITIES_PTH = "../data/zi929.tsp";
